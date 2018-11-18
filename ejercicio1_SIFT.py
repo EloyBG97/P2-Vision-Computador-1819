@@ -1,15 +1,44 @@
 import numpy as np
 import cv2 as cv
 
-img = cv.imread('datos-T2/yosemite/Yosemite1.jpg')
-gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+def agruparOctavas(keyPoints):
+	kp_octaves = {}
 
-sift = cv.xfeatures2d.SIFT_create(0, 3, 0.04, 10, 1.4)
+	for kp in keyPoints:
+		if not str(kp.octave) in kp_octaves:
+			kp_octaves[str(kp.octave)] = []
 
-kp = sift.detect(gray,None)
+		kp_octaves[str(kp.octave)].append(kp)
 
-print("Numero de keypoints: ", len(kp))
+	return kp_octaves
 
-img = cv.drawKeypoints(img,kp,img)
+def color(octave):
+	base = int(octave) % (256*256*256)
 
-cv.imwrite('sift_keypoints.jpg',img)
+
+	r = base % 256
+	g = (base // 256) % 256
+	b = (base // (256*256)) % 256
+
+	return (b,g,r)
+
+def main():
+	img = cv.imread('datos-T2/yosemite/Yosemite1.jpg')
+	gray= cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+
+	sift = cv.xfeatures2d.SIFT_create(0, 3, 0.04, 10, 1.6)
+	kp, descriptor = sift.detectAndCompute(gray,None)
+
+	kp_octaves = agruparOctavas(kp)
+
+	print("Numero de keypoints: ", len(kp))
+
+	for octave, points in kp_octaves.items():
+		img=cv.drawKeypoints(img,points,img,color(octave))
+		
+
+	cv.imwrite('sift_keypoints.jpg',img)
+
+
+if __name__ == '__main__':
+	main()
